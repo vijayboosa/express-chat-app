@@ -7,16 +7,75 @@
   </head>
   <body>
     <input type="text" />
+    <button onclick="btnClicked()">Send message</button>
     <h1>Hello there this is heading tag1</h1>
+    <div id="clients">
+      0
+    </div>
+
+    <div class="msg">
+      <span>
+        Hello there
+      </span>
+    </div>
+    <div class="msg">
+      <span>
+        Hello there
+      </span>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-      console.log("client slide javascript");
+      // connecting to the websocket
+      const socket = io();
 
-      const socket = io()
+      // select the input tag and get the text out of it
+      const inputTag = document.querySelector("input");
 
-      
+      function btnClicked() {
+        // when user clicks on button get the text
+        // from input and send it to server using
+        // socket
+        socket.emit("msg", {
+          message: inputTag.value,
+          userName: "vijay",
+        });
+
+        // clear the input tag
+        inputTag.value = ""
+      }
+
+      socket.on("server msg", (data) => {
+        // data -> {message: "hello", userName: "server"}
+
+        // create a element call div
+        const divTag = document.createElement("div")
+
+        // create span tag 
+        const spanTag = document.createElement('span')
+
+        spanTag.innerText = data.message
+
+        // add the spanTag inside the divTag
+        divTag.appendChild(spanTag)
+
+        // add the divTag inside the body
+        const body = document.body
+
+        // add the divTag to the body
+        body.appendChild(divTag)
+
+      })
+
+      socket.on("new client", (data) => {
+        // select the div tag which has a id called clients
+        const divTag = document.getElementById("clients")
+        divTag.innerText = data.message
+
+      })
+
+
     </script>
   </body>
 </html>
