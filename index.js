@@ -23,11 +23,55 @@ const port = 8080
 // create the express server
 app.set("view engine", "ejs")
 
-function emitNewClient() {
+// this function takes send message to a pipe for a specific topic
+// pipe -> which pipe the data should be sent
+// topic -> which topic msg to be sent
+// msg -> actual data to be sent
+function emitMessage(pipe, topic, msg) {
+    console.log(pipe.connected);
+    // if pipe is not connected
+    if (!pipe.connected) {
+        // remove the pipe from the clientPipes array
+        removeClient(pipe)
+        return
+    }
+
+    pipe.emit(topic, msg)
+}
+
+// this function will send no of client connected information 
+// (Number of clients connect)
+function emitClientConnection() {
     clientPipes.forEach((cPipe) => {
-        cPipe.emit("new client", {
+        // cPipe.emit("client connections", {
+        //     message: clientPipes.length
+        // })
+        const msg = {
             message: clientPipes.length
-        })
+        }
+        emitMessage(cPipe, "client connections", msg)
+    })
+}
+
+// this function takes a pipe as a argument and removes the 
+// pipe from the clientPipes Array
+function removeClient(pipe) {
+    const index = clientPipes.indexOf(pipe)
+    if (index > -1) {
+        // remove the pipe from the clientPipes array
+        clientPipes.splice(index, 1)
+        // update all the pipes in the clientPipe array about the connections
+        emitClientConnection()
+    }
+}
+
+function disconnectTopic(pipe) {
+    pipe.on("disconnect", () => {
+        console.log("client disconnected..");
+        // this function removes the pipe from the clientPipes array
+        removeClient(pipe)
+
+        emitClientConnection()
     })
 }
 
@@ -37,7 +81,7 @@ sockerIO.on("connection", (pipe) => {
     clientPipes.push(pipe)
 
     // this function is called when ever a new client is connected
-    emitNewClient()
+    emitClientConnection()
 
     pipe.on("msg", (data) => {
         // data -> {message: "", userName: "vijay"}
@@ -45,12 +89,13 @@ sockerIO.on("connection", (pipe) => {
 
         // loop through all pipes and forward the message to all the clients
         clientPipes.forEach((cPipe) => {
-            cPipe.emit("server msg", {
-                message: "server received msg: "+data.message,
-            })
+            // cPipe.emit("server msg", {
+            //     message: "server received msg: "+data.message,
+            // })
+            const msg = { message: "server received msg: " + data.message }
+            emitMessage(cPipe, "server msg", msg)
         })
 
-        // we use emit to send data through pipe
 
     })
 })
