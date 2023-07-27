@@ -84,18 +84,16 @@ sockerIO.on("connection", (pipe) => {
     emitClientConnection()
 
     pipe.on("msg", (data) => {
-        // data -> {message: "", userName: "vijay"}
-        console.log("Data received from the client", data);
+        // dnsole.log("Data received from the client", data);
 
+        // cPipe.emit("server msg", {
+        //     message: "server received msg: "+data.message,
+        // })
+        const msg = { message: data.message , userName: data.userName}
         // loop through all pipes and forward the message to all the clients
         clientPipes.forEach((cPipe) => {
-            // cPipe.emit("server msg", {
-            //     message: "server received msg: "+data.message,
-            // })
-            const msg = { message: "server received msg: " + data.message }
             emitMessage(cPipe, "server msg", msg)
         })
-
 
     })
 })

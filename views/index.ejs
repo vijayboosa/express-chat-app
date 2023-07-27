@@ -4,42 +4,66 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
-    <input type="text" />
-    <button onclick="btnClicked()">Send message</button>
-    <h1>Hello there this is heading tag1</h1>
-    <div id="clients">
-      0
-    </div>
+    <div class="container flex flex-col mx-auto h-screen py-2">
 
-    <div class="msg">
-      <span>
-        Hello there
-      </span>
-    </div>
-    <div class="msg">
-      <span>
-        Hello there
-      </span>
-    </div>
+      <div id="msg-container" class="container flex flex-col items-start gap-y-2 p-4 border h-full overflow-scroll">
+          
+          
+    
+      </div>
 
+      <div
+        class="focus-within:outline-indigo-400 focus-within:outline focus-within:border-none container border border-black m-2 flex items-center pr-2 mx-auto rounded"
+      >
+        <input type="text" class="text-2xl focus:outline-transparent m-1 grow" />
+        <svg  onclick="btnClicked()" class="w-6 h-6 fill-current curosor-pointer hover:text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <g data-name="1">
+            <path
+              d="M291.48 449.94A15 15 0 0 1 278 441.5l-70.5-144.93-144.93-70.49a15 15 0 0 1 1-27.41L435.48 49.08A15 15 0 0 1 455 68.6L305.4 440.54a15 15 0 0 1-13.4 9.39Zm-185.38-236 119.18 58a15 15 0 0 1 6.93 6.93l58 119.18L414 90Z"
+            />
+            <path
+              d="M218.72 300.35a15 15 0 0 1-10.6-25.61L430.47 52.39a15 15 0 1 1 21.21 21.22L229.33 296a15 15 0 0 1-10.61 4.35Z"
+            />
+          </g>
+        </svg>
+      </div>
+  </div>
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
       // connecting to the websocket
       const socket = io();
-
+      const msgContainer = document.getElementById("msg-container")
       // select the input tag and get the text out of it
       const inputTag = document.querySelector("input");
+
+      function generateUserId() {
+        var id = "U" + Math.random().toString(16).slice(2)
+        return id
+      }
+
+      inputTag.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && ev.keyCode === 13) {
+          btnClicked()
+        }
+      })
+
+      const userId = generateUserId()
 
       function btnClicked() {
         // when user clicks on button get the text
         // from input and send it to server using
         // socket
+        if (inputTag.value.trim() === "") {
+          return
+        }
+
         socket.emit("msg", {
           message: inputTag.value,
-          userName: "vijay",
+          userName: userId,
         });
 
         // clear the input tag
@@ -47,31 +71,33 @@
       }
 
       socket.on("server msg", (data) => {
-        // data -> {message: "hello", userName: "server"}
-
+        // data -> {message: "hello", userName: "U34b2f23a"}
+        let msg = data.message
+        let userName = data.userName
         // create a element call div
         const divTag = document.createElement("div")
-
-        // create span tag 
-        const spanTag = document.createElement('span')
-
-        spanTag.innerText = data.message
-
-        // add the spanTag inside the divTag
-        divTag.appendChild(spanTag)
-
-        // add the divTag inside the body
-        const body = document.body
-
-        // add the divTag to the body
-        body.appendChild(divTag)
-
+        divTag.className  = "flex flex-col border px-2 py-1 rounded border-cyan-800"
+        if (data.userName === userId) {
+          divTag.classList.add("ml-auto")
+          userName = "You"
+        }
+        /*
+        
+              <span class="text-stone-500	font-semibold text-sm underline">Abhi</span>
+              <span class="font-medium text-black	text-lg">hello how are you</span>
+    
+        */
+       divTag.innerHTML = `
+              <span class="text-stone-500	font-semibold text-sm underline">${userName}</span>
+              <span class="font-medium text-black	text-lg">${msg}</span>
+       `
+       msgContainer.appendChild(divTag)
       })
 
       socket.on("client connections", (data) => {
         // select the div tag which has a id called clients
-        const divTag = document.getElementById("clients")
-        divTag.innerText = data.message
+        // const divTag = document.getElementById("clients")
+        // divTag.innerText = data.message
 
       })
 
